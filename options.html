@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Tab Grouper Options</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Added viewport meta tag -->
+    <style>
+        body { font-family: sans-serif; padding: 1em; }
+        label { display: block; margin-top: 1em; }
+        input[type="text"], input[type="number"], select { width: 300px; padding: 5px; margin-top: 0.2em; }
+        button { padding: 8px 15px; margin-top: 1.5em; cursor: pointer; }
+        .status { margin-top: 1em; font-style: italic; }
+        .privacy-notice { font-size: 0.9em; color: #555; margin-top: 0.5em; max-width: 350px; }
+        /* Style for the container to hide/show */
+        #modelNameContainer { display: none; }
+    </style>
+</head>
+<body>
+    <h1>AI Tab Grouper Settings</h1>
+    <form id="options-form">
+        <label for="apiKey">AI Service API Key:</label>
+        <input type="password" id="apiKey" name="apiKey">
+        <small>Required for the AI grouping service.</small>
+        <p class="privacy-notice">To group your tabs, this extension sends the URLs and titles of your open tabs, along with your API key, to an external AI service. Your API key is stored locally in your browser. Please ensure you trust the AI service provider.</p>
+
+        <!-- New fields added here -->
+        <label for="aiProvider">AI Provider:</label>
+        <select id="aiProvider" name="aiProvider">
+            <option value="">-- Select Provider --</option>
+            <option value="Gemini">Gemini</option>
+            <option value="OpenRouter">OpenRouter</option>
+        </select>
+        <small>Select the AI service provider.</small>
+
+        <div id="modelNameContainer">
+            <label for="modelName">Model:</label>
+            <select id="modelName" name="modelName">
+                <option value="">-- Select Model --</option>
+            </select>
+            <small>Select the AI model for the chosen provider.</small>
+        </div>
+        <!-- End of new fields -->
+
+        <label for="groupingSensitivity">Grouping Sensitivity:</label>
+        <input type="number" id="groupingSensitivity" name="groupingSensitivity" min="1" max="10" value="5">
+        <small>Higher values create more, smaller groups (1-10).</small>
+
+        <label for="exclusionPatterns">Advanced Exclusion Rules (Regex, one per line):</label>
+        <textarea id="exclusionPatterns" name="exclusionPatterns" rows="4" style="width: 300px; padding: 5px; margin-top: 0.2em;" placeholder="e.g., ^https:\/\/github\.com\/.*\nmail\.google\.com"></textarea>
+        <small>Prevent tabs whose URLs match any of these Regular Expressions from being grouped. Use standard JavaScript regex syntax.</small>
+
+<label for="disableNotifications">
+            <input type="checkbox" id="disableNotifications" name="disableNotifications"> Disable Start/Complete Notifications
+        </label>
+        <small>Check this box to hide the "Starting grouping..." and "Grouping complete" notifications.</small>
+        <button type="submit">Save Settings</button>
+
+        <details style="margin-top: 2em;">
+            <summary style="cursor: pointer; font-weight: bold;">Developer Options</summary>
+            <div style="border: 1px solid #ccc; padding: 1em; margin-top: 0.5em; background-color: #f9f9f9;">
+                <p style="color: red; font-weight: bold;">Warning: Modifying these settings can affect extension functionality.</p>
+                <label for="groupingPrompt">Grouping Prompt:</label>
+                <textarea id="groupingPrompt" name="groupingPrompt" rows="6" style="width: 95%; margin-top: 0.2em;"></textarea>
+                <small>The prompt used to instruct the AI on how to group tabs. Edit with caution.</small>
+                <br>
+                <button type="button" id="savePromptButton" style="margin-top: 0.5em;">Save Prompt</button>
+                <div id="promptStatus" class="status" style="margin-top: 0.5em;"></div>
+<hr style="margin: 1em 0;">
+                <label for="debugMode">
+                    <input type="checkbox" id="debugMode" name="debugMode"> Enable Debug Logging
+                </label>
+                <small>Show detailed logs in the browser console for troubleshooting.</small>
+            </div>
+        </details>
+    </form>
+    <div id="status" class="status"></div>
+    <script src="options.js"></script>
+</body>
+</html>

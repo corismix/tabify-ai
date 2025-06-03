@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tab Grouper</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            width: 250px; /* Adjust width as needed */
+            padding: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        #statusArea {
+            margin-top: 10px;
+            font-style: italic;
+            color: #555;
+            min-height: 1.2em; /* Reserve space */
+        }
+        a#optionsLink {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        a#optionsLink:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h3>AI Tab Grouper</h3>
+    <button id="triggerGroupBtn">Group Tabs Now</button>
+    <button id="undoGroupBtn" disabled>Undo Last Grouping</button> <!-- Added Undo Button -->
+    <div id="statusArea"></div> <!-- Existing area for feedback -->
+    <a href="#" id="optionsLink">Configure Options</a>
+
+    <script src="popup.js"></script>
+</body>
+</html>
