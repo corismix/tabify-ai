@@ -14,7 +14,7 @@
     "https://openrouter.ai/*"
   ],
   "background": {
-    "scripts": ["background.js"]
+    "service_worker": "background.js"
   },
   "options_ui": { "page": "options.html", "open_in_tab": true },
   "action": {
