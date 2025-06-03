@@ -582,6 +582,33 @@ function validateGroupingSuggestions(suggestions) {
     return suggestions; // Return validated suggestions
 }
 
+// Attempts to parse JSON from a string, even if the string contains text
+// before or after the JSON. Useful for handling LLM responses that may
+// prepend analysis or wrap the JSON in code fences.
+function parseJsonFromText(text) {
+    try {
+        return JSON.parse(text);
+    } catch (_) {
+        const braceStart = text.indexOf('{');
+        const braceEnd = text.lastIndexOf('}');
+        if (braceStart !== -1 && braceEnd > braceStart) {
+            const jsonCandidate = text.substring(braceStart, braceEnd + 1);
+            try {
+                return JSON.parse(jsonCandidate);
+            } catch (e) {
+                // continue to array attempt below
+            }
+        }
+        const bracketStart = text.indexOf('[');
+        const bracketEnd = text.lastIndexOf(']');
+        if (bracketStart !== -1 && bracketEnd > bracketStart) {
+            const jsonCandidate = text.substring(bracketStart, bracketEnd + 1);
+            return JSON.parse(jsonCandidate);
+        }
+        throw new Error('Failed to parse JSON from AI response.');
+    }
+}
+
 async function callAIService(tabs, apiKey, aiProvider, modelName, groupingPrompt) {
     logDebug(`Calling AI service for provider: ${aiProvider}, model: ${modelName}`);
 
@@ -606,16 +633,16 @@ async function callAIService(tabs, apiKey, aiProvider, modelName, groupingPrompt
 
                 // First, handle potential "models/models/"
                 if (correctedModelName.startsWith("models/models/")) {
-                    if (self.isDebugMode) console.log(`[AI Tab Grouper Debug] Correcting "models/models/" prefix for: '${correctedModelName}'`);
+                    if (isDebugMode) console.log(`[AI Tab Grouper Debug] Correcting "models/models/" prefix for: '${correctedModelName}'`);
                     correctedModelName = correctedModelName.substring("models/".length);
-                    if (self.isDebugMode) console.log(`[AI Tab Grouper Debug] After "models/models/" correction: '${correctedModelName}'`);
+                    if (isDebugMode) console.log(`[AI Tab Grouper Debug] After "models/models/" correction: '${correctedModelName}'`);
                 }
                 // Then, ensure "models/" prefix if it's missing (e.g. if only "gemini-1.5-pro" was stored)
                 // This case is less likely given current storage logic but adds robustness.
                 if (!correctedModelName.startsWith("models/")) {
-                     if (self.isDebugMode) console.log(`[AI Tab Grouper Debug] Adding "models/" prefix to: '${correctedModelName}'`);
+                     if (isDebugMode) console.log(`[AI Tab Grouper Debug] Adding "models/" prefix to: '${correctedModelName}'`);
                      correctedModelName = `models/${correctedModelName}`;
-                     if (self.isDebugMode) console.log(`[AI Tab Grouper Debug] After adding "models/" prefix: '${correctedModelName}'`);
+                     if (isDebugMode) console.log(`[AI Tab Grouper Debug] After adding "models/" prefix: '${correctedModelName}'`);
                 }
             }
             // ... rest of the function, ensure apiUrl uses correctedModelName for Gemini ...
@@ -722,11 +749,18 @@ async function callAIService(tabs, apiKey, aiProvider, modelName, groupingPrompt
             if (!aiResponseText) {
                 throw new Error("OpenRouter response did not contain expected text content.");
             }
-            // Attempt to parse JSON, handling potential markdown code blocks
+            // Attempt to parse JSON, handling potential markdown code blocks or extra text
             if (aiResponseText.startsWith('```json') && aiResponseText.endsWith('```')) {
                 aiResponseText = aiResponseText.substring(7, aiResponseText.length - 3).trim();
             }
-            return validateGroupingSuggestions(JSON.parse(aiResponseText));
+            let suggestions;
+            try {
+                suggestions = parseJsonFromText(aiResponseText);
+            } catch (e) {
+                console.error(`[AI Tab Grouper Debug] Error parsing JSON from OpenRouter: ${e.message}. Raw response:`, aiResponseText);
+                throw new Error(`AI Service response error (OpenRouter): ${e.message}.`);
+            }
+            return validateGroupingSuggestions(suggestions);
 
         } else {
             throw new Error("Unsupported AI provider.");
@@ -801,7 +835,7 @@ function mergeChunkSuggestions(allChunkSuggestions, tabsFromFailedChunks) {
  * Applies the grouping suggestions by creating tab groups and moving tabs.
  * @param {Array<Object>} suggestions - Array of group suggestions (e.g., [{name: "Group Name", tabIds: [1,2,3]}]).
  * @param {Array<Object>} allOriginalTabs - All tabs that were considered for grouping (for undo context).
- * @param {boolean} isDebugModeFromCaller - The debug mode state passed from the caller.
+ * @param {boolean} isDebugModeValue - The debug mode state passed from the caller.
  * @returns {boolean} True if groups were applied, false otherwise.
  */
 async function applyGroupingSuggestions(suggestions, allTabsInWindow, isDebugModeValue, tabsThatWereProcessedByAI) {
